@@ -1,0 +1,44 @@
+def calculate_discount(price, discount_percent):
+    """
+    Calculate the final price after applying a discount.
+    Only apply the discount if it is 20% or higher.
+    """
+    if discount_percent >= 20:
+        discount_amount = (discount_percent / 100) * price
+        final_price = price - discount_amount
+        return final_price
+    else:
+        return price
+
+
+# Handle multiple items with receipt
+try:
+    num_items = int(input("Enter the number of items: "))
+    items = []  # store details of each item
+    total_cost = 0
+
+    for i in range(1, num_items + 1):
+        print(f"\nItem {i}:")
+        price = float(input("  Enter the original price: "))
+        discount_percent = float(input("  Enter the discount percentage: "))
+
+        final_price = calculate_discount(price, discount_percent)
+        items.append((i, price, discount_percent, final_price))
+
+        total_cost += final_price
+
+    # Print receipt
+    print("\n========== RECEIPT ==========")
+    print(f"{'Item':<6}{'Original':<12}{'Discount%':<12}{'Final Price':<12}")
+    print("-" * 42)
+
+    for item in items:
+        item_no, price, discount_percent, final_price = item
+        print(f"{item_no:<6}{price:<12.2f}{discount_percent:<12.1f}{final_price:<12.2f}")
+
+    print("-" * 42)
+    print(f"{'TOTAL':<30}{total_cost:.2f}")
+    print("=============================")
+
+except ValueError:
+    print("Invalid input! Please enter numeric values for price, discount, and number of items.")
