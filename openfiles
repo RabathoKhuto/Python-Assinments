@@ -1,0 +1,79 @@
+# Dynamic File Modification + Error Handling for Multiple Files
+
+def modify_content(content, choice):
+    """
+    Modify content based on user choice.
+    """
+    lines = content.splitlines()
+
+    if choice == "1":  # Uppercase
+        modified_lines = [line.upper() for line in lines]
+    elif choice == "2":  # Lowercase
+        modified_lines = [line.lower() for line in lines]
+    elif choice == "3":  # Add line numbers
+        modified_lines = [f"{i+1}: {line}" for i, line in enumerate(lines)]
+    elif choice == "4":  # Replace word
+        word_to_replace = input("Enter the word to replace: ")
+        replacement = input("Enter the replacement word: ")
+        modified_lines = [line.replace(word_to_replace, replacement) for line in lines]
+    else:
+        print("Invalid choice. No modification applied.")
+        modified_lines = lines
+
+    return "\n".join(modified_lines)
+
+
+def process_file(input_filename):
+    """
+    Process a single file: read, modify, and save to a new file.
+    """
+    try:
+        # Open and read the input file
+        with open(input_filename, "r") as infile:
+            content = infile.read()
+
+        # Ask user for modification type
+        print(f"\nChoose modification for '{input_filename}':")
+        print("1. Uppercase")
+        print("2. Lowercase")
+        print("3. Add line numbers")
+        print("4. Replace a word")
+        choice = input("Enter your choice (1-4): ")
+
+        # Modify content
+        modified_content = modify_content(content, choice)
+
+        # Write to new file
+        output_filename = "modified_" + input_filenames
+        with open(output_filename, "w") as outfile:
+            outfile.write(modified_content)
+
+        print(f"✅ File '{input_filename}' processed successfully!")
+        print(f"Modified file saved as '{output_filename}'.\n")
+
+    except FileNotFoundError:
+        print(f"❌ Error: The file '{input_filename}' does not exist.")
+    except PermissionError:
+        print(f"❌ Error: Permission denied for '{input_filename}'.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred with '{input_filename}': {e}")
+
+
+def main():
+    try:
+        # Ask for multiple files
+        files_input = input("Enter the filenames to process (comma-separated): ")
+        filenames = [name.strip() for name in files_input.split(",")]
+
+        # Process each file individually
+        for filename in filenames:
+            process_file(filename)
+
+        print("🎉 All files processed!")
+
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+
+
+if __name__ == "__main__":
+    main()
