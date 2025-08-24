@@ -1,0 +1,287 @@
+import json
+
+# ---------- Smartphone Classes ----------
+class Smartphone:
+    def __init__(self, brand, model, battery_percent):
+        self.brand = brand
+        self.model = model
+        self.__battery_percent = battery_percent  # private attribute
+
+    def phone_info(self):
+        print(f"Brand: {self.brand}, Model: {self.model}, Battery: {self.__battery_percent}%")
+
+    def charge(self, amount):
+        if amount > 0:
+            self.__battery_percent += amount
+            if self.__battery_percent > 100:
+                self.__battery_percent = 100
+            print(f"Battery charged to {self.__battery_percent}%")
+        else:
+            print("Invalid charge amount!")
+
+    def use_battery(self, amount):
+        if amount > 0 and amount <= self.__battery_percent:
+            self.__battery_percent -= amount
+            print(f"Battery now at {self.__battery_percent}%")
+        else:
+            print("Not enough battery or invalid amount.")
+
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "brand": self.brand,
+            "model": self.model,
+            "battery": self.__battery_percent
+        }
+
+    @staticmethod
+    def from_dict(data):
+        if data["type"] == "GamingPhone":
+            return GamingPhone(data["brand"], data["model"], data["battery"])
+        else:
+            return Smartphone(data["brand"], data["model"], data["battery"])
+
+
+class GamingPhone(Smartphone):
+    def play_game(self, hours):
+        print(f"Playing games for {hours} hours...")
+        self.use_battery(hours * 10)
+
+
+# ---------- Vehicle Classes ----------
+class Vehicle:
+    def move(self):
+        pass
+
+    def to_dict(self):
+        return {"type": self.__class__.__name__}
+
+    @staticmethod
+    def from_dict(data):
+        if data["type"] == "Car":
+            return Car()
+        elif data["type"] == "Plane":
+            return Plane()
+        elif data["type"] == "Boat":
+            return Boat()
+
+
+class Car(Vehicle):
+    def move(self):
+        print("Driving 🚗")
+
+
+class Plane(Vehicle):
+    def move(self):
+        print("Flying ✈️")
+
+
+class Boat(Vehicle):
+    def move(self):
+        print("Sailing ⛴️")
+
+
+# ---------- File Handling ----------
+def save_to_file(data, filename="saved_data.json"):
+    with open(filename, "w") as f:
+        json.dump(data, f)
+    print(f"✅ Data saved to '{filename}'.")
+
+
+def load_from_file(filename="saved_data.json"):
+    try:
+        with open(filename, "r") as f:
+            data = json.load(f)
+        print(f"✅ Data loaded from '{filename}'.")
+        return data
+    except FileNotFoundError:
+        print(f"❌ No saved file found. Starting fresh.")
+        return []
+    except Exception as e:
+        print(f"❌ Error loading file: {e}")
+        return []
+
+
+# ---------- Interactive Menus ----------
+def smartphone_menu(saved_phones):
+    print("\n--- Add Smartphone ---")
+    brand = input("Enter brand: ")
+    model = input("Enter model: ")
+    battery = int(input("Enter battery percentage (0-100): "))
+    choice = input("Create regular phone or gaming phone? (r/g): ").lower()
+    phone = GamingPhone(brand, model, battery) if choice == "g" else Smartphone(brand, model, battery)
+    saved_phones.append(phone)
+    print(f"✅ Phone '{brand} {model}' added.")
+
+
+def manage_smartphone(phone):
+    while True:
+        print("\nSmartphone Options:")
+        print("1. View Info")
+        print("2. Charge Battery")
+        print("3. Use Battery")
+        if isinstance(phone, GamingPhone):
+            print("4. Play Game")
+        print("5. Back")
+        action = input("Choose an option: ")
+
+        if action == "1":
+            phone.phone_info()
+        elif action == "2":
+            amount = int(input("Enter charge amount: "))
+            phone.charge(amount)
+        elif action == "3":
+            amount = int(input("Enter usage amount: "))
+            phone.use_battery(amount)
+        elif action == "4" and isinstance(phone, GamingPhone):
+            hours = int(input("Enter hours to play: "))
+            phone.play_game(hours)
+        elif action == "5":
+            break
+        else:
+            print("Invalid choice.")
+
+
+def display_smartphones(saved_phones, allow_delete=False):
+    if not saved_phones:
+        print("No smartphones saved yet.")
+        return
+    for i, phone in enumerate(saved_phones, 1):
+        print(f"{i}. {phone.brand} {phone.model}")
+    choice = int(input("Select a phone (0 to cancel): "))
+    if choice == 0:
+        return
+    if 1 <= choice <= len(saved_phones):
+        if allow_delete:
+            confirm = input("Delete this smartphone? (y/n): ").lower()
+            if confirm == "y":
+                removed = saved_phones.pop(choice - 1)
+                print(f"✅ Removed {removed.brand} {removed.model}.")
+                return
+        manage_smartphone(saved_phones[choice - 1])
+    else:
+        print("Invalid choice.")
+
+
+def search_smartphones(saved_phones):
+    if not saved_phones:
+        print("No smartphones saved yet.")
+        return
+    keyword = input("Enter brand or model to search: ").lower()
+    matches = [phone for phone in saved_phones if keyword in phone.brand.lower() or keyword in phone.model.lower()]
+    if matches:
+        print("Search Results:")
+        for i, phone in enumerate(matches, 1):
+            print(f"{i}. {phone.brand} {phone.model}")
+        choice = int(input("Select a phone to manage (0 to cancel): "))
+        if 1 <= choice <= len(matches):
+            manage_smartphone(matches[choice - 1])
+    else:
+        print("No matches found.")
+
+
+def vehicle_menu(saved_vehicles):
+    print("\n--- Add Vehicle ---")
+    print("1. Car\n2. Plane\n3. Boat")
+    choice = input("Choose vehicle to add: ")
+    vehicle = None
+    if choice == "1":
+        vehicle = Car()
+    elif choice == "2":
+        vehicle = Plane()
+    elif choice == "3":
+        vehicle = Boat()
+    if vehicle:
+        saved_vehicles.append(vehicle)
+        print(f"✅ {vehicle.__class__.__name__} added.")
+    else:
+        print("❌ Invalid choice.")
+
+
+def display_vehicles(saved_vehicles, allow_delete=False):
+    if not saved_vehicles:
+        print("No vehicles saved yet.")
+        return
+    for i, vehicle in enumerate(saved_vehicles, 1):
+        print(f"{i}. {vehicle.__class__.__name__}")
+    choice = int(input("Select a vehicle (0 to cancel): "))
+    if choice == 0:
+        return
+    if 1 <= choice <= len(saved_vehicles):
+        if allow_delete:
+            confirm = input("Delete this vehicle? (y/n): ").lower()
+            if confirm == "y":
+                removed = saved_vehicles.pop(choice - 1)
+                print(f"✅ Removed {removed.__class__.__name__}.")
+                return
+        print(f"\nUsing {saved_vehicles[choice - 1].__class__.__name__}:")
+        saved_vehicles[choice - 1].move()
+    else:
+        print("Invalid choice.")
+
+
+def search_vehicles(saved_vehicles):
+    if not saved_vehicles:
+        print("No vehicles saved yet.")
+        return
+    keyword = input("Enter vehicle type to search (Car/Plane/Boat): ").lower()
+    matches = [v for v in saved_vehicles if keyword == v.__class__.__name__.lower()]
+    if matches:
+        print("Search Results:")
+        for i, v in enumerate(matches, 1):
+            print(f"{i}. {v.__class__.__name__}")
+        choice = int(input("Select a vehicle to use (0 to cancel): "))
+        if 1 <= choice <= len(matches):
+            print(f"\nUsing {matches[choice - 1].__class__.__name__}:")
+            matches[choice - 1].move()
+    else:
+        print("No matches found.")
+
+
+# ---------- Main Program ----------
+def main():
+    data = load_from_file()
+    saved_phones = [Smartphone.from_dict(d) if d["type"] == "Smartphone" else GamingPhone.from_dict(d)
+                     for d in data if d["type"] in ["Smartphone", "GamingPhone"]]
+    saved_vehicles = [Vehicle.from_dict(d) for d in data if d["type"] in ["Car", "Plane", "Boat"]]
+
+    while True:
+        print("\n===== Main Menu =====")
+        print("1. Add Smartphone")
+        print("2. Manage Smartphones / Delete / Search")
+        print("3. Add Vehicle")
+        print("4. Use Vehicles / Delete / Search")
+        print("5. Save & Exit")
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            smartphone_menu(saved_phones)
+        elif choice == "2":
+            print("a. View/Manage Smartphones")
+            print("b. Search Smartphones")
+            sub = input("Choose: ").lower()
+            if sub == "a":
+                display_smartphones(saved_phones, allow_delete=True)
+            elif sub == "b":
+                search_smartphones(saved_phones)
+        elif choice == "3":
+            vehicle_menu(saved_vehicles)
+        elif choice == "4":
+            print("a. View/Use Vehicles")
+            print("b. Search Vehicles")
+            sub = input("Choose: ").lower()
+            if sub == "a":
+                display_vehicles(saved_vehicles, allow_delete=True)
+            elif sub == "b":
+                search_vehicles(saved_vehicles)
+        elif choice == "5":
+            all_data = [p.to_dict() for p in saved_phones] + [v.to_dict() for v in saved_vehicles]
+            save_to_file(all_data)
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice, try again.")
+
+
+if __name__ == "__main__":
+    main()
